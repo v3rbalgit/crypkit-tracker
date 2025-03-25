@@ -1,0 +1,10 @@
+.git
+.vscode
+__pycache__
+*.pyc
+*.log
+backend/tests
+backend/.pytest_cache
+backend/.ruff_cache
+backend/crypkit_tracker.egg-info
+frontend/node_modules
