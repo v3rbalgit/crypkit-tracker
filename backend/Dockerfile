@@ -2,6 +2,9 @@
 FROM python:3.12-slim
 COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
+# Install curl for health checks
+RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
+
 # Everything outputs to the terminal (no buffering)
 ENV PYTHONUNBUFFERED=1 \
     UV_LINK_MODE=copy
