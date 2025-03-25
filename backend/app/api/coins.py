@@ -4,9 +4,11 @@ from typing import List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 from pydantic import ValidationError
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.database import get_db
+from app.db.models import PortfolioEntry
 from app.schemas.models import CoinDetail, CoinBase, CoinSearchResponse, CoinSearchResults
 from app.services.coingecko import coingecko_service
 
@@ -85,10 +87,6 @@ async def search_coins(
 
         # Check which coins are already in the portfolio
         if search_results:
-            from sqlalchemy import select
-
-            from app.db.models import PortfolioEntry
-
             # Get IDs of coins in the portfolio
             portfolio_query = select(PortfolioEntry.coin_id)
             result = await db.execute(portfolio_query)

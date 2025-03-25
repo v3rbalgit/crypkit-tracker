@@ -47,8 +47,8 @@ def create_database_if_not_exists():
     db_name = settings.POSTGRES_DB
 
     try:
-        # Connection string for PostgreSQL server (without specific database)
-        dsn = f"host={db_host} user={db_user} password={db_pass} port={db_port}"
+        # Connection string for PostgreSQL server (connecting to default 'postgres' database)
+        dsn = f"host={db_host} user={db_user} password={db_pass} port={db_port} dbname=postgres"
 
         # Connect to PostgreSQL server (default database)
         conn = psycopg2.connect(dsn)

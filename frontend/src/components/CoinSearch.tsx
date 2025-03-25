@@ -21,6 +21,7 @@ import {
   InputLabel,
   OutlinedInput,
   ListItemSecondaryAction,
+  Tooltip,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import AddIcon from '@mui/icons-material/Add';
@@ -33,19 +34,18 @@ interface CoinSearchProps {
   onAddCoin: (coinId: string, amount: number) => Promise<boolean>;
   onSelectCoin?: (coin: CoinDetail | null) => void;
   refreshFlag?: number;
+  inHeader?: boolean;
 }
 
-const CoinSearch: React.FC<CoinSearchProps> = ({ onAddCoin, onSelectCoin, refreshFlag }) => {
+const CoinSearch: React.FC<CoinSearchProps> = ({ onAddCoin, onSelectCoin, refreshFlag, inHeader = false }) => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [searchResults, setSearchResults] = useState<CoinSearchResponse[]>([]);
   const [isSearching, setIsSearching] = useState<boolean>(false);
   const [selectedCoin, setSelectedCoin] = useState<CoinDetail | CoinSearchResponse | null>(null);
   const [addDialogOpen, setAddDialogOpen] = useState<boolean>(false);
   const [amount, setAmount] = useState<string>('');
-
   const [error, setError] = useState<string | null>(null);
 
-  // Debounced search function
   const debouncedSearch = useCallback(
     async (query: string) => {
       if (!query.trim()) {
@@ -70,29 +70,25 @@ const CoinSearch: React.FC<CoinSearchProps> = ({ onAddCoin, onSelectCoin, refres
     [refreshFlag]
   );
 
-  // Handle search input change with debounce
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       debouncedSearch(searchQuery);
-    }, 300); // 300ms delay
+    }, 300);
 
     return () => clearTimeout(timeoutId);
   }, [searchQuery, debouncedSearch]);
 
-  // Refresh search results when refreshFlag changes
   useEffect(() => {
     if (searchQuery) {
       debouncedSearch(searchQuery);
     }
   }, [refreshFlag, debouncedSearch, searchQuery]);
 
-  // Handle search input change
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>): void => {
     setSearchQuery(event.target.value);
     setError(null);
   };
 
-  // Handle selecting a coin
   const handleSelectCoin = async (coin: CoinSearchResponse): Promise<void> => {
     try {
       const coinDetails = await coinApi.getCoin(coin.id);
@@ -105,19 +101,16 @@ const CoinSearch: React.FC<CoinSearchProps> = ({ onAddCoin, onSelectCoin, refres
     }
   };
 
-  // Handle opening the add dialog
   const handleOpenAddDialog = (coin: CoinSearchResponse): void => {
     setSelectedCoin(coin);
     setAmount('');
     setAddDialogOpen(true);
   };
 
-  // Handle closing the add dialog
   const handleCloseAddDialog = (): void => {
     setAddDialogOpen(false);
   };
 
-  // Handle adding a coin to the portfolio
   const handleAddCoin = async (): Promise<void> => {
     if (!selectedCoin || !amount || parseFloat(amount) <= 0) return;
 
@@ -132,77 +125,132 @@ const CoinSearch: React.FC<CoinSearchProps> = ({ onAddCoin, onSelectCoin, refres
   };
 
   return (
-    <Box>
-      <Card>
-        <CardContent>
-          <Typography variant="h6" gutterBottom>
-            Search Coins
-          </Typography>
+    <div>
+      <Card
+        sx={{
+          borderRadius: inHeader ? 0 : 3,
+          overflow: 'hidden',
+          boxShadow: inHeader ? 'none' : (theme) => `0 8px 32px ${theme.palette.primary.main}20`,
+          height: inHeader ? 'auto' : 'initial',
+        }}
+      >
+        <CardContent sx={{ p: 3 }}>
+          {!inHeader && (
+            <Typography variant="h6" gutterBottom sx={{
+              fontWeight: 600,
+              background: 'linear-gradient(45deg, #1a237e, #303f9f)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              mb: 3,
+            }}>
+              Search Coins
+            </Typography>
+          )}
 
-          <Box sx={{ mb: 2 }}>
+          <Box sx={{ mb: 3 }}>
             <TextField
               fullWidth
               variant="outlined"
-              placeholder="Search for a coin..."
+              placeholder="Search by name or symbol..."
               value={searchQuery}
               onChange={handleSearchChange}
               InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    {searchQuery && (
-                      <IconButton
-                        aria-label="clear search"
-                        onClick={() => {
-                          setSearchQuery('');
-                          setSearchResults([]);
-                        }}
-                        edge="end"
-                      >
-                        <ClearIcon />
-                      </IconButton>
-                    )}
-                    <Box display="flex" alignItems="center">
-                      {isSearching ? (
-                        <CircularProgress size={24} sx={{ mx: 1 }} />
-                      ) : (
-                        <SearchIcon sx={{ mx: 1, color: 'action.active' }} />
-                      )}
-                    </Box>
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon sx={{ color: 'action.active' }} />
                   </InputAdornment>
                 ),
+                endAdornment: searchQuery && (
+                  <InputAdornment position="end">
+                    <IconButton
+                      onClick={() => setSearchQuery('')}
+                      size="small"
+                      sx={{ mr: 0.5 }}
+                    >
+                      <ClearIcon fontSize="small" />
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+              sx={{
+                '& .MuiOutlinedInput-root': {
+                  borderRadius: 2,
+                  transition: 'all 0.2s ease',
+                  '&:hover': {
+                    backgroundColor: 'rgba(0, 0, 0, 0.01)',
+                  },
+                  '&.Mui-focused': {
+                    boxShadow: (theme) => `0 0 0 2px ${theme.palette.primary.main}40`,
+                  },
+                },
               }}
             />
           </Box>
 
           {searchResults.length > 0 && (
-            <Paper variant="outlined" sx={{ maxHeight: 300, overflow: 'auto' }}>
-              <List dense>
+            <Paper
+              variant="outlined"
+              sx={{
+                maxHeight: 400,
+                overflow: 'auto',
+                bgcolor: 'background.default',
+                borderRadius: 2,
+              }}
+            >
+              <List>
                 {searchResults.map((coin) => (
                   <ListItem
                     key={coin.id}
                     button
                     onClick={() => handleSelectCoin(coin)}
-                    divider
+                    sx={{
+                      py: 2,
+                      transition: 'all 0.2s ease',
+                      '&:hover': {
+                        bgcolor: 'action.hover',
+                      },
+                    }}
                   >
                     <ListItemText
-                      primary={coin.name}
-                      secondary={`Symbol: ${coin.symbol.toUpperCase()}`}
+                      primary={
+                        <Typography variant="subtitle1" sx={{ fontWeight: 500 }}>
+                          {coin.name}
+                        </Typography>
+                      }
+                      secondary={coin.symbol.toUpperCase()}
                     />
                     <ListItemSecondaryAction>
-                      {!coin.in_portfolio && (
-                        <IconButton
-                          edge="end"
-                          aria-label="add"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleOpenAddDialog(coin);
+                      {!coin.in_portfolio ? (
+                        <Tooltip title="Add to portfolio">
+                          <IconButton
+                            edge="end"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleOpenAddDialog(coin);
+                            }}
+                            sx={{
+                              color: 'primary.main',
+                              '&:hover': {
+                                bgcolor: 'primary.main',
+                                color: 'white',
+                              },
+                            }}
+                          >
+                            <AddIcon />
+                          </IconButton>
+                        </Tooltip>
+                      ) : (
+                        <Typography
+                          variant="caption"
+                          sx={{
+                            color: 'success.main',
+                            bgcolor: 'success.light',
+                            px: 1,
+                            py: 0.5,
+                            borderRadius: 1,
+                            fontWeight: 500,
                           }}
                         >
-                          <AddIcon />
-                        </IconButton>
-                      )}
-                      {coin.in_portfolio && (
-                        <Typography variant="caption" color="primary">
                           In Portfolio
                         </Typography>
                       )}
@@ -215,32 +263,38 @@ const CoinSearch: React.FC<CoinSearchProps> = ({ onAddCoin, onSelectCoin, refres
 
           {isSearching && (
             <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
-              <CircularProgress />
+              <CircularProgress size={24} />
             </Box>
           )}
 
           {error && (
-            <Box sx={{ mt: 2, textAlign: 'center' }}>
-              <Typography color="error">
-                {error}
-              </Typography>
-            </Box>
+            <Typography color="error" align="center" sx={{ mt: 2 }}>
+              {error}
+            </Typography>
           )}
 
           {!isSearching && !error && searchQuery && searchResults.length === 0 && (
-            <Box sx={{ mt: 2, textAlign: 'center' }}>
-              <Typography color="text.secondary">
-                No coins found matching '{searchQuery}'
-              </Typography>
-            </Box>
+            <Typography color="text.secondary" align="center" sx={{ mt: 2 }}>
+              No coins found matching '{searchQuery}'
+            </Typography>
           )}
         </CardContent>
       </Card>
 
-      {/* Add Coin Dialog */}
-      <Dialog open={addDialogOpen} onClose={handleCloseAddDialog}>
-        <DialogTitle>
-          Add {selectedCoin?.name} to Portfolio
+      <Dialog
+        open={addDialogOpen}
+        onClose={handleCloseAddDialog}
+        PaperProps={{
+          sx: {
+            borderRadius: 2,
+            boxShadow: (theme) => `0 8px 32px ${theme.palette.primary.main}20`,
+          },
+        }}
+      >
+        <DialogTitle sx={{ pb: 1 }}>
+          <Typography variant="h6" sx={{ fontWeight: 600 }}>
+            Add {selectedCoin?.name} to Portfolio
+          </Typography>
         </DialogTitle>
         <DialogContent>
           <FormControl fullWidth variant="outlined" margin="normal">
@@ -253,21 +307,33 @@ const CoinSearch: React.FC<CoinSearchProps> = ({ onAddCoin, onSelectCoin, refres
               label="Amount"
               inputProps={{ step: 'any', min: '0' }}
               autoFocus
+              sx={{
+                borderRadius: 1.5,
+              }}
             />
           </FormControl>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseAddDialog}>Cancel</Button>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={handleCloseAddDialog} variant="outlined">
+            Cancel
+          </Button>
           <Button
             onClick={handleAddCoin}
             disabled={!amount || parseFloat(amount) <= 0}
-            color="primary"
+            variant="contained"
+            sx={{
+              px: 3,
+              bgcolor: 'primary.main',
+              '&:hover': {
+                bgcolor: 'primary.dark',
+              },
+            }}
           >
             Add to Portfolio
           </Button>
         </DialogActions>
       </Dialog>
-    </Box>
+    </div>
   );
 };
 
