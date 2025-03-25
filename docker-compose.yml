@@ -18,7 +18,7 @@ services:
       - REDIS_HOST=redis
     volumes:
       - ./backend:/app
-      - logs-data:/app/logs
+      - ./backend/logs:/app/logs
     networks:
       - app-network
     healthcheck:
@@ -72,7 +72,6 @@ services:
 volumes:
   postgres-data:
   redis-data:
-  logs-data:
 
 networks:
   app-network:

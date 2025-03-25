@@ -86,7 +86,7 @@ Thumbs.db
 
 # Project specific
 # Keep logs directory but ignore log files
-!backend/logs/
+backend/logs
 backend/logs/*.log
 
 # Local configuration

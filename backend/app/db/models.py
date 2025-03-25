@@ -27,9 +27,7 @@ class Coin(Base):
     current_price: Mapped[Optional[Decimal]] = mapped_column(
         REAL(precision=10, asdecimal=True, decimal_return_scale=8), nullable=True
     )
-    price_change_percentage_24h: Mapped[Optional[float]] = mapped_column(
-        REAL(precision=10, asdecimal=True, decimal_return_scale=8), nullable=True
-    )
+    price_change_percentage_24h: Mapped[Optional[float]] = mapped_column(REAL, nullable=True)
 
     # Market data
     market_cap: Mapped[Optional[Decimal]] = mapped_column(
@@ -74,7 +72,7 @@ class PortfolioEntry(Base):
     coin_id: Mapped[str] = mapped_column(ForeignKey("coins.id"), index=True)
 
     # Amount of coins held
-    amount: Mapped[Decimal] = mapped_column(REAL(precision=18, asdecimal=True), default=0)
+    amount: Mapped[Decimal] = mapped_column(REAL(precision=16, asdecimal=True, decimal_return_scale=2), default=0)
 
     # Timestamps
     updated_at: Mapped[datetime] = mapped_column(

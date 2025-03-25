@@ -28,9 +28,7 @@ def upgrade() -> None:
         sa.Column("symbol", sa.String(), nullable=False),
         sa.Column("name", sa.String(), nullable=False),
         sa.Column("current_price", sa.REAL(precision=10, asdecimal=True, decimal_return_scale=8), nullable=True),
-        sa.Column(
-            "price_change_percentage_24h", sa.REAL(precision=10, asdecimal=True, decimal_return_scale=8), nullable=True
-        ),
+        sa.Column("price_change_percentage_24h", sa.REAL, nullable=True),
         sa.Column("market_cap", sa.REAL(precision=16, asdecimal=True, decimal_return_scale=2), nullable=True),
         sa.Column("market_cap_rank", sa.Integer(), nullable=True),
         sa.Column("circulating_supply", sa.REAL(precision=16, asdecimal=True, decimal_return_scale=2), nullable=True),
@@ -50,7 +48,7 @@ def upgrade() -> None:
         "portfolio_entries",
         sa.Column("id", sa.Integer(), autoincrement=True, nullable=False),
         sa.Column("coin_id", sa.String(), nullable=False),
-        sa.Column("amount", sa.REAL(precision=10, asdecimal=True, decimal_return_scale=8), nullable=False),
+        sa.Column("amount", sa.REAL(precision=16, asdecimal=True, decimal_return_scale=2), nullable=False),
         sa.Column(
             "updated_at", sa.DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
         ),
